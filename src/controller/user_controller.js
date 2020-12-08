@@ -13,7 +13,6 @@ class UserController {
     const user = ctx.request.body
     // 查询数据
     const result = await service.create(user)
-    console.log("result: ", result);
     // 返回数据
     ctx.body = result
   }
