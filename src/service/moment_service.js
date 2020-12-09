@@ -2,7 +2,7 @@
  * @Author: lwy
  * @Date: 2020-12-08 10:18:20
  * @LastEditors: OBKoro1
- * @LastEditTime: 2020-12-08 14:09:28
+ * @LastEditTime: 2020-12-09 17:15:08
  * @FilePath: /coderhub/src/service/moment_service.js
  */
 const connection = require('../app/database')
@@ -29,12 +29,17 @@ class MomentService {
     return result[0]
   }
   async getMomentList(offset, size) {
-
     const statement = `
     ${sqlFrgment}
     LIMIT ?,?;
     `
     const [result] = await connection.execute(statement,[offset, size])
+    return result
+  }
+
+  async update(content, momentId) {
+    const statement = `UPDATE comment SET content = ? WHERE id = ?;`
+    const [result] = await connection.execute(statement, [content, momentId])
     return result
   }
 }

@@ -2,7 +2,7 @@
  * @Author: lwy
  * @Date: 2020-11-24 15:49:08
  * @LastEditors: OBKoro1
- * @LastEditTime: 2020-12-02 17:16:35
+ * @LastEditTime: 2020-12-08 15:14:55
  * @FilePath: /coderhub/src/app/error-handle.js
  */
 const errorTypes = require('../constants/error-types')
@@ -32,6 +32,11 @@ const errorHandle = function (error, ctx) {
       status = 401,
         message = 'token无效'
       break;
+      case errorTypes.UNPERMISSION:
+        status = 401,
+          message = '您不具备操作权限'
+        break;
+      
     default:
       status = 404,
         message = "Not Found"
