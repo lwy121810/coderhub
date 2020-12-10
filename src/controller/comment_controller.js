@@ -2,7 +2,7 @@
  * @Author: lwy
  * @Date: 2020-12-09 16:19:48
  * @LastEditors: OBKoro1
- * @LastEditTime: 2020-12-09 17:59:00
+ * @LastEditTime: 2020-12-10 10:07:57
  * @FilePath: /coderhub/src/controller/comment_controller.js
  */
 
@@ -13,16 +13,36 @@ class CommentController {
   async create(ctx, next) {
     const {id} = ctx.user
     const { momentId, content } = ctx.request.body;
+    if (!momentId) {
+      ctx.body = 'momentId不能为空'
+      return
+    }
+    if (!content) {
+      ctx.body = 'content不能为空！'
+      return
+    }
     const res = await commentService.create(momentId, content,id)
     ctx.body = res 
   }
   // 回复评论
   async reply(ctx, next) {
-    const { id } = ctx.user 
     const { content, momentId } = ctx.request.body
+    if(!content) {
+      ctx.body = 'content 不能为空'
+      return
+    }
+    if (!momentId) {
+      ctx.body = 'momentId不能为空'
+      return
+    }
+    const { id } = ctx.user 
     const { commentId } = ctx.params
-    const res = await commentService.reply(momentId, content, id, commentId)
-    ctx.body = res 
+    try {
+      const res = await commentService.reply(momentId, content, id, commentId)
+      ctx.body = res 
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   // 修改评论
@@ -37,6 +57,12 @@ class CommentController {
     const { commentId } = ctx.params
     const res = await commentService.remove(commentId)
     ctx.body = res 
+  }
+  // 获取对动态的评论列表
+  async list(ctx, next) {
+    const { momentId } = ctx.query
+    const result = await commentService.commentsByMomentId(momentId)
+    ctx.body = result
   }
 
 }

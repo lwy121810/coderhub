@@ -2,7 +2,7 @@
  * @Author: lwy
  * @Date: 2020-12-09 16:17:19
  * @LastEditors: OBKoro1
- * @LastEditTime: 2020-12-09 17:47:59
+ * @LastEditTime: 2020-12-10 13:55:07
  * @FilePath: /coderhub/src/router/comment_router.js
  */
 
@@ -17,7 +17,8 @@
    create,
    reply,
    update,
-   remove
+   remove,
+   list
  } = require('../controller/comment_controller')
 
  const commentRouter = new Router({prefix:'/comment'})
@@ -31,5 +32,8 @@
  commentRouter.patch('/:commentId', verfiyAuth, verfiyPermission, update)
  // 删除评论
  commentRouter.delete('/:commentId', verfiyAuth, verfiyPermission, remove)
+
+ // 获取评论列表（对动态的评论，对评论的评论不获取）
+ commentRouter.get('/', list)
 
  module.exports = commentRouter
