@@ -2,7 +2,7 @@
  * @Author: lwy
  * @Date: 2020-12-08 10:18:20
  * @LastEditors: OBKoro1
- * @LastEditTime: 2020-12-11 17:32:42
+ * @LastEditTime: 2020-12-14 16:41:18
  * @FilePath: /coderhub/src/service/moment_service.js
  */
 const connection = require('../app/database')
@@ -57,26 +57,59 @@ class MomentService {
     */
    // 除了获取动态的内容和创建者 还要获取动态的评论列表，以及评论的用户 评论所属的标签
 // IF(expr1,expr2,expr3) 类似于三目运算符 expr1为真的话返回expr2的结果 否则返回expr3的结果
+    // const statement = `
+    //   SELECT 
+    //     m.id id, m.content content, m.createAt createTime, m.updateAt updateTime,
+    //     JSON_OBJECT('id',u.id,'name',u.name) user,
+    //     IF(COUNT(c.id),JSON_ARRAYAGG(
+    //       JSON_OBJECT('id', c.id, 'content',c.content, 'commentId', c.comment_id, 'createTime', c.createAt, 
+    //         'user',JSON_OBJECT('id', cu.id, 'name', cu.name))
+    //     ),NULL) comments,
+    //     IF(COUNT(l.id),JSON_ARRAYAGG(
+    //       JSON_OBJECT('id', l.id, 'name', l.name)
+    //     ),NULL) labels 
+    //   FROM moment m 
+    //   LEFT JOIN user u ON m.user_Id = u.id
+    //   
+    // 这里会造成重复数据 因为LEFT JOIN是对上次的结果进行左连接
+    // 假设上次的匹配的数据有三条 就会对这三条数据依次进行左连接 就会造成重复的数据
+    // 解决方法：使用下面的子查询
+    //   LEFT JOIN comment c ON c.moment_id = m.id 
+    //   LEFT JOIN user cu ON c.user_id = cu.id 
+    // 
+    //   LEFT JOIN moment_label ml ON ml.moment_id = m.id 
+    //   LEFT JOIN label l ON l.id = ml.label_id
+    //   WHERE m.id = ?
+    //   GROUP BY m.id;
+    // `
+    
+    // 上面的语句会造成comments和labels里有重复的数据
+    // 这里使用子查寻
+
+    // (SELECT IF(COUNT(c.id),JSON_ARRAYAGG(
+    //   JSON_OBJECT('id', c.id, 'content',c.content, 'commentId', c.comment_id, 'createTime', c.createAt, 
+    //     'user',JSON_OBJECT('id', cu.id, 'name', cu.name))
+    // ),NULL) FROM comment c LEFT JOIN user cu ON c.user_id = cu.id WHERE c.moment_id = m.id) comments 
+    
     const statement = `
       SELECT 
         m.id id, m.content content, m.createAt createTime, m.updateAt updateTime,
         JSON_OBJECT('id',u.id,'name',u.name) user,
-        IF(COUNT(c.id),JSON_ARRAYAGG(
-          JSON_OBJECT('id', c.id, 'content',c.content, 'commentId', c.comment_id, 'createTime', c.createAt, 
-            'user',JSON_OBJECT('id', cu.id, 'name', cu.name))
-        ),NULL) comments,
         IF(COUNT(l.id),JSON_ARRAYAGG(
           JSON_OBJECT('id', l.id, 'name', l.name)
-        ),NULL) labels 
+        ),NULL) labels,
+        (SELECT IF(COUNT(c.id),JSON_ARRAYAGG(
+          JSON_OBJECT('id', c.id, 'content',c.content, 'commentId', c.comment_id, 'createTime', c.createAt, 
+            'user',JSON_OBJECT('id', cu.id, 'name', cu.name))
+        ),NULL) FROM comment c LEFT JOIN user cu ON c.user_id = cu.id WHERE c.moment_id = m.id) comments 
       FROM moment m 
       LEFT JOIN user u ON m.user_Id = u.id
-      LEFT JOIN comment c ON c.moment_id = m.id 
-      LEFT JOIN user cu ON c.user_id = cu.id 
       LEFT JOIN moment_label ml ON ml.moment_id = m.id 
       LEFT JOIN label l ON l.id = ml.label_id
-      WHERE m.id = ?
+      WHERE m.id = 1
       GROUP BY m.id;
     `
+
     try {
       const [result] = await connection.execute(statement,[id])
       return result[0]
